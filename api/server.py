@@ -1,8 +1,10 @@
 import hashlib
 import json
 import os
+import pdb
 from typing import Optional
 
+from bson import ObjectId
 from fastapi import FastAPI, HTTPException
 from passlib.handlers import bcrypt
 from pydantic import BaseModel, EmailStr
@@ -14,7 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
-
+import pdb
 import jwt
 from passlib.context import CryptContext
 import bcrypt
@@ -43,7 +45,8 @@ app.add_middleware(
 )
 
 # JWT settings
-SECRET_KEY = os.getenv("USER_API_SECRET")
+
+SECRET_KEY = config['JWT']['secret']
 
 ALGORITHM = "HS256"
 
@@ -58,7 +61,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 async def create_jwt_token(data: dict):
     to_encode = data.copy()
+
+    to_encode['uhash'] = str(to_encode['uhash'])
     token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
     return token
 
 async def authenticate_user(username: str, password: str):
@@ -104,10 +110,11 @@ async def create_user(username: str, password: str, email: EmailStr, profile_ima
 @app.post("/login/")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     with Client(config) as client:
-        user = client.get_user(form_data.username)
+        # pdb.set_trace()
+        user = User.parse_obj(client.get_user(form_data.username))
 
         provided_password_bytes = form_data.password.encode("utf-8")
-        if user is None or not bcrypt.checkpw(provided_password_bytes, user['password_hash'].encode("utf-8")):
+        if user is None or not bcrypt.checkpw(provided_password_bytes, user.password_hash.encode("utf-8")):
             raise HTTPException(
                 status_code=400,
                 detail="Incorrect username or password",
@@ -115,11 +122,11 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             )
 
         # Create a dictionary with user claims
-        user_claims = {"uhash": user["uhash"]}
+        user_claims = {"uhash": user.id}
 
         # Generate the JWT token
-        access_token = create_jwt_token(user_claims)
-
+        access_token = await create_jwt_token(user_claims)
+        pdb.set_trace()
         return {"access_token": access_token, "token_type": "bearer"}
 
 
