@@ -3,7 +3,7 @@ from psycopg2 import sql
 import configparser
 
 config = configparser.ConfigParser()
-config.read("settings.cfg")
+config.read("StarterFastAPIUserLogin/settings.cfg")
 
 # Connect to your PostgreSQL database
 conn = psycopg2.connect(

@@ -22,16 +22,17 @@ from passlib.context import CryptContext
 import bcrypt
 from starlette.middleware.cors import CORSMiddleware
 
-from models.users import User
-from rds.rds import Client
+from StarterFastAPIUserLogin.models.users import User
+from StarterFastAPIUserLogin.rds.rds import Client
 
-from api.token_verification import verify_token
+from StarterFastAPIUserLogin.api.token_verification import verify_token
 import configparser
 import datetime
 
-from rds.table_create_scripts.users import verify_or_create_tables
+from StarterFastAPIUserLogin.rds.table_create_scripts.users import verify_or_create_tables
 config = configparser.ConfigParser()
-config.read("settings.cfg")
+
+config.read("StarterFastAPIUserLogin/settings.cfg")
 
 verify_or_create_tables()
 app = FastAPI()
@@ -126,7 +127,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
         # Generate the JWT token
         access_token = await create_jwt_token(user_claims)
-        pdb.set_trace()
+
         return {"access_token": access_token, "token_type": "bearer"}
 
 

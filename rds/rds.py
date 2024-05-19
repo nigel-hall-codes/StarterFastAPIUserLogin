@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2 import sql
 import pdb
-from models import users
+from StarterFastAPIUserLogin.models import users
 
 
 class Client:
